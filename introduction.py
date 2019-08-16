@@ -1,51 +1,46 @@
 import numpy as np
 
-class StudentAgent(object):
-    def __init__(self):
-        # NOTE: 1 extra element in weight and biases matrices. Element at (1, 1)
-        self.weights = self.random2x2()
-        self.biases = self.random2x2()
+class Network(object):
+    def __init__(self, arch=(2, 2, 2, 1)):
+        self.arch = arch
+        self.weights = self.initializeWeights()
+        self.biases = self.initializeBiases()
 
-    def random2x2(self):
-        return np.array([[1.0, 0.0] for _ in range(2)])
-        return np.array([np.random.uniform(0, 1, 2) for _ in range(2)])
+    def initializeBiases(self):
+        biasesSize = [self.arch[i] for i in range(1, len(self.arch))]
+        biases = [np.random.uniform(-5, 5, biasesSize[i]).reshape((biasesSize[i], 1)) for i in range(len(biasesSize))]
+        return biases
 
-    def askQuestion(self, x1, x2):
-        # Init activations.
-        activations = np.zeros((2, 3))
-        activations[0][0] = x1
-        activations[1][0] = x2
+    def initializeWeights(self):
+        weightsSize = [(self.arch[i + 1], self.arch[i]) for i in range(len(self.arch) - 1)]
+        weights = [np.random.uniform(0, 1, weightsSize[i][0] * weightsSize[i][1]).reshape(weightsSize[i]) for i in range(len(weightsSize))]
+        return weights
 
-        activations = activations.T
+    def feedForward(self, inputVector):
+        activations = [inputVector]
+        zs = []
+        for i in range(len(self.arch) - 1):
+            zVector = self.weights[i] @ activations[i] + self.biases[i]
+            zs.append(zVector)
+            activationVector = self.activationFunction(zVector)
+            activations.append(activationVector)
+        return [activations, zs]
 
-        # Init z values.
-        zs = np.zeros((2, 2))
-        # Loop through the levels
-        for l in range(0, len(self.weights)):
-            # Without sigmoid.
-            withoutBias = activations[l] @ self.weights
-            z = activations[l] @ self.weights + self.biases[l]
-            # zs[0][l] = z[0]
-            # zs[1][l] = z[1]
-            zs[l] = z
-            # Sigmoid function.
-            a = self.activationFunction(z)
-            activations[l + 1] = a
-            # activations[0][l + 1] = a[0]
-            # activations[1][l + 1] = a[1]
+    def finalLayerError(self, output, correct, outputZs):
+        return ((output - correct) * self.activationDerivative(outputZs))
 
-        print(activations)
-        # Final result
-        result = activations[-1][0]
-        return result
+    def backpropagation(self):
+
+
+    def activationDerivative(self, z):
+        return self.activationFunction(z) * (1 - self.activationVector(z))
 
     def activationFunction(self, z):
         return (1 / (np.exp(-z) + 1));
 
 def main():
-    student = StudentAgent()
-    result = student.askQuestion(1.0, 2.0)
-    print(result)
+    student = Network(arch=(2, 2, 2, 1))
+    student.feedForward(np.array([[1], [1]]))
 
 if __name__ == "__main__":
     main()
