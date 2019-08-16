@@ -29,6 +29,11 @@ class Network(object):
     def finalLayerError(self, output, correct, outputZs):
         return ((output - correct) * self.activationDerivative(outputZs))
 
+    def layerErr(self, nextErr, zVector, weights):
+        return  (weights.T @ nextErr * self.activationDerivative(zVector))
+
+    def 
+
     def backpropagation(self):
 
 
