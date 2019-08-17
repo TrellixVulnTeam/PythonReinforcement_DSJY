@@ -85,34 +85,56 @@ class Network(object):
         return (1 / (np.exp(-z) + 1));
 
 def simpleFunctionData(size):
-    coordinates = [np.random.uniform(0, 10, 2).reshape((2, 1)) for _ in range(size)]
+    coordinates = [np.random.uniform(-10, 10, 2).reshape((2, 1)) for _ in range(size)]
     data = []
     for i in range(size):
         x = coordinates[i][0][0]
         y = coordinates[i][1][0]
 
-        # Function 2*x + 1
+        # Function x²+y²x
         label = 1
-        if y < 2 * x + 1:
+        if y < math.pow(x, 2):
             label = 0
         data.append([coordinates[i], label])
     return data
 
+def getResult(n, testInput):
+    result = n.feedForward(testInput)
+    x = result[0][-1][0][0]
+
+    if x < 0.5:
+        return 0
+    return 1
+
+def getDataStats(inputData):
+    ones = 0
+    zeros = 0
+    for sample in inputData:
+        r = sample[1]
+        if r == 0:
+            zeros += 1
+        else:
+            ones += 1
+    return [zeros, ones]
+
 def main():
-    data = simpleFunctionData(10)
+    data = simpleFunctionData(100)
     student = Network(arch=(2, 3, 1))
-    for i in range(10000):
-        student.gradientDescent(data, 0.2)
+    for i in range(1000):
+        student.gradientDescent(data, 4.0)
     errSum = 0
-    testData = simpleFunctionData(10)
+    testData = simpleFunctionData(1000)
+    zeros, ones = getDataStats(testData)
+    print(zeros)
+    print(ones)
+    failCounter = 0
     for sample in testData:
-        guess = student.feedForward(sample[0])[0][-1]
-        correct = sample[1]
-        err = (correct - guess)
-        errSum = errSum + abs(err[0][0])
-    print(errSum / len(testData))
-    result = student.feedForward(np.array([[2], [1]]))
-    print(result[0][-1][0][0])
+        result = getResult(student, sample[0])
+        correctResult = sample[1]
+        if correctResult != result:
+            failCounter += 1
+    print(failCounter)
+    print(failCounter / len(testData))
 
 if __name__ == "__main__":
     main()
