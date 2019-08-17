@@ -1,4 +1,5 @@
 import numpy as np
+import math
 
 class Network(object):
     def __init__(self, arch=(2, 2, 2, 1)):
@@ -58,16 +59,60 @@ class Network(object):
             biasGradient[U] = deltas[U]
         return [weightGradient, biasGradient]
 
+    def gradientDescent(self, trainingData, tr):
+        weightNabla = [np.zeros(i.shape) for i in self.weights]
+        biasNabla = [np.zeros(i.shape) for i in self.biases]
+        # Loop trough all samples.
+        for sample in trainingData:
+            inputVector, correct = sample
+            weightGradient, biasGradient = self.backpropagation(inputVector, correct)
+            # Update nablas.
+            for i in range(len(weightNabla)):
+                weightNabla[i] = weightNabla[i] + weightGradient[i]
+            for j in range(len(biasNabla)):
+                biasNabla[j] = biasNabla[j] + biasGradient[j]
+
+        # Finally update the current weights and biases.
+        for i in range(len(self.weights)):
+            self.weights[i] = self.weights[i] - (tr/len(trainingData) * weightNabla[i])
+        for i in range(len(self.biases)):
+            self.biases[i] = self.biases[i] - (tr/len(trainingData) * biasNabla[i])
+
     def activationDerivative(self, z):
         return self.activationFunction(z) * (1 - self.activationFunction(z))
 
     def activationFunction(self, z):
         return (1 / (np.exp(-z) + 1));
 
+def simpleFunctionData(size):
+    coordinates = [np.random.uniform(0, 10, 2).reshape((2, 1)) for _ in range(size)]
+    data = []
+    for i in range(size):
+        x = coordinates[i][0][0]
+        y = coordinates[i][1][0]
+
+        # Function 2*x + 1
+        label = 1
+        if y < 2 * x + 1:
+            label = 0
+        data.append([coordinates[i], label])
+    return data
+
 def main():
-    student = Network(arch=(2, 3, 2, 1))
-    student.feedForward(np.array([[1], [1]]))
-    student.backpropagation(np.array([[1], [1]]), np.array([[1]]))
+    data = simpleFunctionData(10)
+    student = Network(arch=(2, 3, 1))
+    for i in range(10000):
+        student.gradientDescent(data, 0.2)
+    errSum = 0
+    testData = simpleFunctionData(10)
+    for sample in testData:
+        guess = student.feedForward(sample[0])[0][-1]
+        correct = sample[1]
+        err = (correct - guess)
+        errSum = errSum + abs(err[0][0])
+    print(errSum / len(testData))
+    result = student.feedForward(np.array([[2], [1]]))
+    print(result[0][-1][0][0])
 
 if __name__ == "__main__":
     main()
