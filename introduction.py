@@ -32,7 +32,8 @@ class Network(object):
         return (difference * self.activationDerivative(outputZs))
 
     def layerErr(self, nextErr, zVector, weights):
-        return  (weights.T @ nextErr * self.activationDerivative(zVector))
+        a = np.dot(weights.T, nextErr)
+        return  (a * self.activationDerivative(zVector))
 
     def weightCost(self, previousActivation, currErr):
         return np.dot(previousActivation.T, currErr)
@@ -45,7 +46,7 @@ class Network(object):
         deltas = [0 for i in range(len(self.arch) - 1)]
         deltas[-1] = lastError
         for L in range(len(deltas) - 2, -1, -1):
-            deltas[L] = self.layerErr(deltas[L + 1], zs[L + 1], self.weights[L + 1])
+            deltas[L] = self.layerErr(deltas[L + 1], zs[L], self.weights[L + 1])
         weightGradient = [np.zeros(self.weights[i].shape) for i in range(len(self.weights))]
         for Y in range(len(self.weights)):
             for j in range(len(self.weights[Y])):
@@ -64,7 +65,7 @@ class Network(object):
         return (1 / (np.exp(-z) + 1));
 
 def main():
-    student = Network(arch=(2, 2, 2, 1))
+    student = Network(arch=(2, 3, 2, 1))
     student.feedForward(np.array([[1], [1]]))
     student.backpropagation(np.array([[1], [1]]), np.array([[1]]))
 
